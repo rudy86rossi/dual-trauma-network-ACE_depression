@@ -1,4 +1,4 @@
-###Analisi di network PHQ-9 (GGM) e RFQ as moderator (MNM)####
+###Netwrok Analysis ACE depression PHQ-9 (GGM) and RFQ as moderator (MNM)####
 
 ### Library ###
 library(bootnet) 
@@ -10,17 +10,6 @@ library(parallel)
 library(EGAnet)       
 library(igraph)   
 
-?bootnet
-?qgraph
-?networktools
-?mgm
-?tidyverse
-?parallel
-?FactorGraph
-?netSimulator
-?EGA
-?`EGAnet-package`
-
 ###Datasets x GGM e MNM####
 dual_trauma <- read_csv("Data/dual_trauma.csv")
 phq_items   <- paste0("phq0", 1:9)
@@ -29,12 +18,12 @@ data_ggm <- dual_trauma %>%
   filter(complete.cases(.))  #969 part (female=481, male=479, prefer not to say=9)
 
 
-#dataset per MNM con RFQ_tot 
+#dataset for ModeratedNetworkModel with RFQ_tot (overall)
 data_rfqtot <- dual_trauma %>% select(rfq_tot, all_of(phq_items)) %>% filter(complete.cases(.))
 #mean-centered data
 m_rfqtot <- mean(data_rfqtot$rfq_tot)
 
-#dataset per MNM con RFQ02 
+#dataset for MNM with singular items of RFQ 
 data_rfq02 <- dual_trauma %>% select(rfq02, all_of(phq_items)) %>% filter(complete.cases(.))
 data_rfq05 <- dual_trauma %>% select(rfq05, all_of(phq_items)) %>%  filter(complete.cases(.))
 data_rfq07 <- dual_trauma %>% select(rfq07, all_of(phq_items)) %>%  filter(complete.cases(.))
@@ -49,9 +38,9 @@ m_rfq02 <- mean(data_rfq02$rfq02)
 
 ega_result <- EGA(
   data      = data_ggm,
-  model     = "glasso",       # usa graphical LASSO (come EBICglasso)
-  algorithm = "walktrap",     # algoritmo di community detection
-  plot.EGA  = TRUE            # mostra il plot
+  model     = "glasso",       #  graphical LASSO (come EBICglasso)
+  algorithm = "walktrap",     # algorithm of community detection
+  plot.EGA  = TRUE            # show the plot
 )
 
 boot_ega <- bootEGA(
@@ -63,12 +52,12 @@ boot_ega <- bootEGA(
   ncores    = max(1, parallel::detectCores() - 1)
 )
 
-#unidimensional--> usare solo strength e EI (non Bridge)
+#unidimensional--> only strength and EI (non Bridge)
 
 
 
 
-###GGM PHQ-9####
+###GaussianGraphicalModel PHQ-9####
 colours_phq <- rep("lightblue", 9)
 node_labels <- paste0("PHQ0", 1:9)
 
@@ -92,7 +81,7 @@ plot_network_phq <- qgraph(network_phq$graph, layout = "spring", color = colours
 qgraph(plot_network_phq, filetype='jpeg', dpi = 300)
 
 
-###stabilità edges####
+###stability edges####
 btnt_np <- bootnet(network_phq,
                    type = "nonparametric",
                    statistics = "edge",
@@ -152,12 +141,13 @@ mgm_rfq_tot <- mgm(data = as.matrix(data_rfqtot),
 mgm_rfq_tot$interactions$indicator
 showInteraction(mgm_rfq_tot, int = c(1,7,10)) #0.103 positive
 
-#visualizzazione factor Graph#
+#plot Factor Graph#
 FactorGraph(mgm_rfq_tot, labels = c("rfq_tot", node_labels), 
             layout = "spring",
             shapeSizes = c(6,3),
             colors =   c("lightblue", "lightgreen", "red"))
 
+#Factor graph with nodewise regression#
 FactorGraph(mgm_rfq_tot, labels = c("rfq_tot", node_labels), 
             layout = "spring",
             Nodewise = TRUE,
@@ -168,38 +158,38 @@ FactorGraph(mgm_rfq_tot, labels = c("rfq_tot", node_labels),
 
 
 
-            
+
 #MOD with singular items RFQ#
 
 mgm_rfq02 <- mgm(data = as.matrix(data_rfq02),
-                   type = rep("g", 10),
-                   level = rep(1,10),
-                   moderators = 1,
-                   lambdaSel = "EBIC",
-                   lambdaGam = 0.5,
-                   ruleReg = "AND",
-                   scale = TRUE,
-                   verbatim = T)
+                 type = rep("g", 10),
+                 level = rep(1,10),
+                 moderators = 1,
+                 lambdaSel = "EBIC",
+                 lambdaGam = 0.5,
+                 ruleReg = "AND",
+                 scale = TRUE,
+                 verbatim = T)
 
 mgm_rfq05 <- mgm(data = as.matrix(data_rfq05),
-                   type = rep("g", 10),
-                   level = rep(1,10),
-                   moderators = 1,
-                   lambdaSel = "EBIC",
-                   lambdaGam = 0.5,
-                   ruleReg = "AND",
-                   scale = TRUE,
-                   verbatim = T)
-            
+                 type = rep("g", 10),
+                 level = rep(1,10),
+                 moderators = 1,
+                 lambdaSel = "EBIC",
+                 lambdaGam = 0.5,
+                 ruleReg = "AND",
+                 scale = TRUE,
+                 verbatim = T)
+
 mgm_rfq07 <- mgm(data = as.matrix(data_rfq07),
-                   type = rep("g", 10),
-                   level = rep(1,10),
-                   moderators = 1,
-                   lambdaSel = "EBIC",
-                   lambdaGam = 0.5,
-                   ruleReg = "AND",
-                   scale = TRUE,
-                   verbatim = T)          
+                 type = rep("g", 10),
+                 level = rep(1,10),
+                 moderators = 1,
+                 lambdaSel = "EBIC",
+                 lambdaGam = 0.5,
+                 ruleReg = "AND",
+                 scale = TRUE,
+                 verbatim = T)          
 mgm_rfq12 <- mgm(data = as.matrix(data_rfq12),
                  type = rep("g", 10),
                  level = rep(1,10),
@@ -226,14 +216,14 @@ mgm_rfq07$interactions$indicator
 mgm_rfq12$interactions$indicator
 mgm_rfq13$interactions$indicator
 
-#Unica tripla selezionata da RFQ02#
+#Three-way interaction with RFQ02#
 showInteraction(mgm_rfq02, int = c(1,7,10)) #0.118 positive
-mgm_rfq02$pairwise$wadj[1, 7]  #peso diretto tra rfq02 e phq06 (0.05)
-mgm_rfq02$pairwise$wadj[1, 10]  #nessun arco pairwise tra rfq02 e phq09
-mgm_rfq02$rawlambda      # pesi grezzi per ogni regressione nodewise
+mgm_rfq02$pairwise$wadj[1, 7]  #direct pairwise rfq02  phq06 (0.05)
+mgm_rfq02$pairwise$wadj[1, 10]  #no edge pairwise between rfq02  phq09
+mgm_rfq02$rawlambda      
 mgm_rfq02$interactions$weights[[1]]  
 mgm_rfq02$interactions$weights[[2]]
-#factorgraph RFQ02 moderatore#
+#factorgraph RFQ02 moderator#
 FactorGraph(mgm_rfq02, labels = c("rfq02", node_labels), 
             layout = "spring",
             shapeSizes = c(6,3),
@@ -246,7 +236,7 @@ FactorGraph(mgm_rfq02, labels = c("rfq02", node_labels),
             edge.labels = TRUE,
             colors =   c("lightblue", "lightgreen", "red"))
 
-###Reti CONDIZIONATE con vari livelli di RFQ02####
+###condition networks with RFQ02####
 
 m_rfq02 <- mean(data_rfq02$rfq02)
 vals_orig <- c(1, 3, 4)
@@ -259,13 +249,13 @@ for (k in 1:3) {
 }
 
 
-# Step 2: scala comune (maximum)
+# maximum
 
 v_max <- sapply(1:3, function(k) max(abs(l_mgm_cond[[k]]$pairwise$wadj)))
 max_w <- max(v_max)
 
 
-# Step 3: layout comune (stessi nodi, stessa posizione)
+# layout 
 
 layout_comune <- averageLayout(
   l_mgm_cond[[1]]$pairwise$wadj,
@@ -274,8 +264,8 @@ layout_comune <- averageLayout(
 )
 
 
-# Step 4: etichette e colori archi
-# PHQ06 (col 7) - PHQ09 (col 10) in rosso
+
+# PHQ06 (col 7) - PHQ09 (col 10) 
 
 etichette <- c("Mai(nessun abuso)",
                "Qualche volta",
@@ -287,7 +277,7 @@ edge_col[6, 9] <- "#D62728"
 edge_col[9, 6] <- "#D62728"
 
 
-# Step 5: plot 3 reti affiancate
+# plot
 
 par(mfrow = c(1, 3))
 
@@ -318,7 +308,7 @@ for (k in 1:3) {
          curveAll       = TRUE,
          curveDefault   = 0.5,
          mar            = c(3, 3, 5, 3))
-         
+  
 }
 
 par(mfrow = c(1, 1))
@@ -326,7 +316,7 @@ par(mfrow = c(1, 1))
 
 
 
-?resample
+
 ###RESAMPLE di rfq_tot e rfq02####
 res_rfq_tot <- resample(object = mgm_rfq_tot,
                         data = as.matrix(data_rfqtot),
@@ -343,8 +333,8 @@ plotRes(object = res_rfq_tot,
 
 
 res_rfq02 <- resample(object = mgm_rfq02,
-                        data = as.matrix(data_rfq02),
-                        nB = 500)
+                      data = as.matrix(data_rfq02),
+                      nB = 500)
 
 png("hist_PHQ06_PHQ09.png", width = 800, height = 600)
 hist(res_rfq02$bootParameters[7, 10, ],
