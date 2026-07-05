@@ -1,4 +1,4 @@
-###Netwrok Analysis ACE depression PHQ-9 (GGM) and RFQ as moderator (MNM)####
+###Network Analysis ACE depression PHQ-9 (GGM) and RFQ as moderator (MNM)####
 
 ### Library ###
 library(bootnet) 
